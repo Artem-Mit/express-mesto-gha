@@ -1,5 +1,9 @@
 const Card = require("../models/card");
-const { NOT_FOUND_ERROR_CODE, VALIDATION_ERROR_CODE, DEFAULT_ERROR } = require("../utils/constatnts");
+const {
+  NOT_FOUND_ERROR_CODE,
+  VALIDATION_ERROR_CODE,
+  DEFAULT_ERROR
+} = require("../utils/constatnts");
 
 const getCards = (req, res) => {
   Card.find({})
@@ -39,14 +43,22 @@ const handleCardLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true }
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (card === null) {
+        res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: "карточка не существует" });
+        return;
+      }
+      res.send(card);
+    })
     .catch((err) => {
       if (err.name === "CastError") {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         return;
       }
       if (err.name === "ValidationError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
+        res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         return;
       }
       res.status(DEFAULT_ERROR).send({ message: err.message });
@@ -59,14 +71,22 @@ const handleCardDislike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (card === null) {
+        res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: "карточка не существует" });
+        return;
+      }
+      res.send(card);
+    })
     .catch((err) => {
       if (err.name === "CastError") {
         res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         return;
       }
       if (err.name === "ValidationError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
+        res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
         return;
       }
       res.status(DEFAULT_ERROR).send({ message: err.message });
