@@ -27,10 +27,18 @@ const createCard = (req, res) => {
 
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (card === null) {
+        res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: "карточка не существует" });
+        return;
+      }
+      res.send(card);
+    })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
         return;
       }
       res.status(DEFAULT_ERROR).send({ message: err.message });
@@ -54,7 +62,7 @@ const handleCardLike = (req, res) => {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
         return;
       }
       if (err.name === "ValidationError") {
@@ -82,7 +90,7 @@ const handleCardDislike = (req, res) => {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(NOT_FOUND_ERROR_CODE).send({ message: err.message });
+        res.status(VALIDATION_ERROR_CODE).send({ message: err.message });
         return;
       }
       if (err.name === "ValidationError") {
