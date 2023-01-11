@@ -5,6 +5,8 @@ const rateLimit = require("express-rate-limit");
 const bodyParser = require("body-parser");
 const usersRouter = require("./routes/users");
 const cardsRouter = require("./routes/cards");
+const auth = require("./middlewares/auth");
+const { login, createUser } = require("./controllers/users");
 
 const app = express();
 const { PORT = 3000 } = process.env;
@@ -21,15 +23,12 @@ mongoose.connect("mongodb://localhost:27017/mestodb");
 app.use(limiter);
 app.use(helmet());
 app.use(bodyParser.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: "63b2e533fbeedaa41a047355",
-  };
-
-  next();
-});
+app.post("/signin", login);
+app.post("/signup", createUser);
+app.use(auth);
 app.use("/users", usersRouter);
 app.use("/cards", cardsRouter);
+
 app.use("*", (req, res) => {
   res.status(404).send({ message: "Not available" });
 });

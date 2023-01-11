@@ -7,6 +7,8 @@ const {
   WRONG_CARD_ID,
   CARD_DOES_NOT_EXIST,
   VALIDATION_ERROR_MESSAGE,
+  FORBIDDEN_ERROR_CODE,
+  FORBIDDEN_ERROR_MESSAGE,
 } = require("../utils/constatnts");
 
 const getCards = (req, res) => {
@@ -36,6 +38,12 @@ const deleteCard = (req, res) => {
         res
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: CARD_DOES_NOT_EXIST });
+        return;
+      }
+      if (!card.owner === req.user._id) {
+        res
+          .status(FORBIDDEN_ERROR_CODE)
+          .send({ message: FORBIDDEN_ERROR_MESSAGE });
         return;
       }
       res.send(card);
