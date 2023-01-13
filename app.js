@@ -7,6 +7,7 @@ const usersRouter = require("./routes/users");
 const cardsRouter = require("./routes/cards");
 const auth = require("./middlewares/auth");
 const { login, createUser } = require("./controllers/users");
+const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
 const { PORT = 3000 } = process.env;
@@ -28,9 +29,9 @@ app.post("/signup", createUser);
 app.use(auth);
 app.use("/users", usersRouter);
 app.use("/cards", cardsRouter);
-
 app.use("*", (req, res) => {
   res.status(404).send({ message: "Not available" });
 });
+app.use(errorHandler);
 
 app.listen(PORT);

@@ -20,8 +20,8 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: "string",
-    required: "true",
-    unique: "true",
+    required: true,
+    unique: true,
     validate: {
       validator: (v) => validator.isEmail(v),
       message: (props) => `${props.value} is not a valid E-mail !`,
@@ -29,8 +29,8 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: "string",
-    required: "true",
-    select: "false",
+    required: true,
+    select: false,
   },
 });
 

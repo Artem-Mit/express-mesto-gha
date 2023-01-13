@@ -1,63 +1,55 @@
 const Card = require("../models/card");
 const {
-  NOT_FOUND_ERROR_CODE,
-  VALIDATION_ERROR_CODE,
-  DEFAULT_ERROR,
-  DEFAULT_ERROR_MESSAGE,
   WRONG_CARD_ID,
   CARD_DOES_NOT_EXIST,
   VALIDATION_ERROR_MESSAGE,
-  FORBIDDEN_ERROR_CODE,
   FORBIDDEN_ERROR_MESSAGE,
 } = require("../utils/constatnts");
+const NotFoundError = require("../errors/notFoundError");
+const ValidationError = require("../errors/validationError");
+const ForbiddenError = require("../errors/forbiddenError");
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE }));
+    .catch((err) => next(err));
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const user = req.user._id;
   Card.create({ name, link, owner: user })
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: VALIDATION_ERROR_MESSAGE });
+        next(new ValidationError(VALIDATION_ERROR_MESSAGE));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (card === null) {
-        res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: CARD_DOES_NOT_EXIST });
-        return;
+        throw new NotFoundError(CARD_DOES_NOT_EXIST);
       }
       if (!card.owner === req.user._id) {
-        res
-          .status(FORBIDDEN_ERROR_CODE)
-          .send({ message: FORBIDDEN_ERROR_MESSAGE });
-        return;
+        throw new ForbiddenError(FORBIDDEN_ERROR_MESSAGE);
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: VALIDATION_ERROR_MESSAGE });
+        next(new ValidationError(VALIDATION_ERROR_MESSAGE));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const handleCardLike = (req, res) => {
+const handleCardLike = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -65,23 +57,20 @@ const handleCardLike = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: CARD_DOES_NOT_EXIST });
-        return;
+        throw new NotFoundError(CARD_DOES_NOT_EXIST);
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: WRONG_CARD_ID });
+        next(new ValidationError(WRONG_CARD_ID));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const handleCardDislike = (req, res) => {
+const handleCardDislike = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -89,19 +78,16 @@ const handleCardDislike = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: CARD_DOES_NOT_EXIST });
-        return;
+        throw new NotFoundError(CARD_DOES_NOT_EXIST);
       }
       res.send(card);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: WRONG_CARD_ID });
+        next(new ValidationError(WRONG_CARD_ID));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 

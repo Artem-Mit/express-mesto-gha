@@ -3,64 +3,60 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 const {
-  NOT_FOUND_ERROR_CODE,
-  VALIDATION_ERROR_CODE,
-  DEFAULT_ERROR,
-  DEFAULT_ERROR_MESSAGE,
   USER_DOES_NOT_EXIST,
   WRONG_USER_ID,
   VALIDATION_ERROR_MESSAGE,
   WRONG_AUTH_DATA_MESSAGE,
-  AUTH_ERROR_CODE,
 } = require("../utils/constatnts");
+const NotFoundError = require("../errors/notFoundError");
+const ValidationError = require("../errors/validationError");
+const AuthError = require("../errors/authError");
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => {
       res.send(users);
     })
-    .catch(() => {
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+    .catch((err) => {
+      next(err);
     });
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
-        res.status(NOT_FOUND_ERROR_CODE).send({ message: USER_DOES_NOT_EXIST });
-        return;
+        throw new NotFoundError(USER_DOES_NOT_EXIST);
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: WRONG_USER_ID });
+        next(new ValidationError(WRONG_USER_ID));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const getMe = (req, res) => {
+const getMe = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (user === null) {
-        res.status(NOT_FOUND_ERROR_CODE).send({ message: USER_DOES_NOT_EXIST });
-        return;
+        throw new NotFoundError(USER_DOES_NOT_EXIST);
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        res.status(VALIDATION_ERROR_CODE).send({ message: WRONG_USER_ID });
+        next(new ValidationError(WRONG_USER_ID));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -72,16 +68,14 @@ const createUser = (req, res) => {
     .then((user) => res.send({ data: user }))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        res
-          .status(VALIDATION_ERROR_CODE)
-          .send({ message: VALIDATION_ERROR_MESSAGE });
+        next(new ValidationError(VALIDATION_ERROR_MESSAGE));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { name: req.body.name, about: req.body.about },
@@ -90,16 +84,14 @@ const updateUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        res
-          .status(VALIDATION_ERROR_CODE)
-          .send({ message: VALIDATION_ERROR_MESSAGE });
+        next(new ValidationError(VALIDATION_ERROR_MESSAGE));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: req.body.avatar },
@@ -108,34 +100,30 @@ const updateAvatar = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        res
-          .status(VALIDATION_ERROR_CODE)
-          .send({ message: VALIDATION_ERROR_MESSAGE });
+        next(new ValidationError(VALIDATION_ERROR_MESSAGE));
         return;
       }
-      res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE });
+      next(err);
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email }).select("+password")
     .then((user) => {
       if (!user) {
-        res.status(AUTH_ERROR_CODE).send({ message: WRONG_AUTH_DATA_MESSAGE });
-        return;
+        throw new AuthError(WRONG_AUTH_DATA_MESSAGE);
       }
       bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            res.status(AUTH_ERROR_CODE).send({ message: WRONG_AUTH_DATA_MESSAGE });
-            return;
+            throw new AuthError(WRONG_AUTH_DATA_MESSAGE);
           }
           const token = jwt.sign({ _id: user._id }, "eb28135ebcfc17578f96d4d65b6c7871f2c803be4180c165061d5c2db621c51b", { expiresIn: "7d" });
           res.cookie("jwt", token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).end();
         });
     })
-    .catch(() => res.status(DEFAULT_ERROR).send({ message: DEFAULT_ERROR_MESSAGE }));
+    .catch((err) => next(err));
 };
 
 module.exports = {
