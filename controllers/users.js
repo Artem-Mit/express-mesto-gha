@@ -124,7 +124,7 @@ const login = (req, res, next) => {
             throw new AuthError(WRONG_AUTH_DATA_MESSAGE);
           }
           const token = jwt.sign({ _id: user._id }, "eb28135ebcfc17578f96d4d65b6c7871f2c803be4180c165061d5c2db621c51b", { expiresIn: "7d" });
-          res.cookie("jwt", token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).end();
+          res.cookie("jwt", token, { maxAge: 3600000 * 24 * 7, httpOnly: true }).send({ token });
         });
     })
     .catch((err) => next(err));
