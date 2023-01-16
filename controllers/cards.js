@@ -32,10 +32,10 @@ const createCard = (req, res, next) => {
 const deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .then((card) => {
-      const owner = card.owner.toString();
       if (card === null) {
         throw new NotFoundError(CARD_DOES_NOT_EXIST);
       }
+      const owner = card.owner.toString();
       if (owner !== req.user._id) {
         throw new ForbiddenError(FORBIDDEN_ERROR_MESSAGE);
       }
