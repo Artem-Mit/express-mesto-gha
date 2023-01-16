@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const bodyParser = require("body-parser");
+const { celebrate, Joi, errors } = require("celebrate");
 const usersRouter = require("./routes/users");
 const cardsRouter = require("./routes/cards");
 const auth = require("./middlewares/auth");
@@ -24,14 +25,28 @@ mongoose.connect("mongodb://localhost:27017/mestodb");
 app.use(limiter);
 app.use(helmet());
 app.use(bodyParser.json());
-app.post("/signin", login);
-app.post("/signup", createUser);
+app.post("/signin", celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().email(),
+    password: Joi.string().min(1),
+  }),
+}), login);
+app.post("/signup", celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().regex(/^https:\/\//i),
+    email: Joi.string().email(),
+    password: Joi.string().min(1),
+  }),
+}), createUser);
 app.use(auth);
 app.use("/users", usersRouter);
 app.use("/cards", cardsRouter);
 app.use("*", (req, res) => {
   res.status(404).send({ message: "Not available" });
 });
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(PORT);
