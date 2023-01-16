@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 
 const cardSchema = new mongoose.Schema({
   name: {
-    type: "string",
+    type: String,
     minlength: 2,
     maxlength: 30,
     required: true,
   },
   link: {
-    type: "string",
+    type: String,
     required: true,
   },
   owner: {

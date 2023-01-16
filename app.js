@@ -19,7 +19,7 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-mongoose.set("strictQuery", true);
+mongoose.set("strictQuery", false);
 mongoose.connect("mongodb://localhost:27017/mestodb");
 
 app.use(limiter);
@@ -27,8 +27,8 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.post("/signin", celebrate({
   body: Joi.object().keys({
-    email: Joi.string().email(),
-    password: Joi.string().min(1),
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
   }),
 }), login);
 app.post("/signup", celebrate({
@@ -37,7 +37,7 @@ app.post("/signup", celebrate({
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().regex(/^https:\/\//i),
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(1),
+    password: Joi.string().required(),
   }),
 }), createUser);
 app.use(auth);
