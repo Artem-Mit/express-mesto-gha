@@ -30,42 +30,26 @@ const createCard = (req, res, next) => {
 };
 
 const deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId, (err, card) => {
-    if (err) {
+  Card.findById(req.params.cardId)
+    .then((card) => {
+      if (card === null) {
+        throw new NotFoundError(CARD_DOES_NOT_EXIST);
+      }
+      const owner = card.owner.toString();
+      if (owner !== req.user._id) {
+        throw new ForbiddenError(FORBIDDEN_ERROR_MESSAGE);
+      }
+      card.deleteOne({ _id: card._id });
+      res.send(card);
+    })
+    .catch((err) => {
       if (err.name === "CastError") {
         next(new ValidationError(VALIDATION_ERROR_MESSAGE));
         return;
       }
       next(err);
-    }
-    if (card === null) {
-      throw new NotFoundError(CARD_DOES_NOT_EXIST);
-    }
-    const owner = card.owner.toString();
-    if (owner !== req.user._id) {
-      throw new ForbiddenError(FORBIDDEN_ERROR_MESSAGE);
-    }
-    res.send(card);
-  });
+    });
 };
-  // .then((card) => {
-  //   if (card === null) {
-  //     throw new NotFoundError(CARD_DOES_NOT_EXIST);
-  //   }
-  //   const owner = card.owner.toString();
-  //   if (owner !== req.user._id) {
-  //     throw new ForbiddenError(FORBIDDEN_ERROR_MESSAGE);
-  //   }
-  //   card.deleteOne({ _id: card._id });
-  //   res.send(card);
-  // })
-  // .catch((err) => {
-  //   if (err.name === "CastError") {
-  //     next(new ValidationError(VALIDATION_ERROR_MESSAGE));
-  //     return;
-  //   }
-  //   next(err);
-  // });
 
 const cardLikeToggler = (req, res, next, action) => {
   Card.findByIdAndUpdate(
