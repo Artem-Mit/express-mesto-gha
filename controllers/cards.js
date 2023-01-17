@@ -51,10 +51,10 @@ const deleteCard = (req, res, next) => {
     });
 };
 
-const handleCardLike = (req, res, next) => {
+const cardLikeToggler = (req, res, next, action) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
+    action,
     { new: true },
   )
     .then((card) => {
@@ -72,25 +72,12 @@ const handleCardLike = (req, res, next) => {
     });
 };
 
+const handleCardLike = (req, res, next) => {
+  cardLikeToggler(req, res, next, { $addToSet: { likes: req.user._id } });
+};
+
 const handleCardDislike = (req, res, next) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },
-  )
-    .then((card) => {
-      if (card === null) {
-        throw new NotFoundError(CARD_DOES_NOT_EXIST);
-      }
-      res.send(card);
-    })
-    .catch((err) => {
-      if (err.name === "CastError") {
-        next(new ValidationError(WRONG_CARD_ID));
-        return;
-      }
-      next(err);
-    });
+  cardLikeToggler(req, res, next, { $pull: { likes: req.user._id } });
 };
 
 module.exports = {

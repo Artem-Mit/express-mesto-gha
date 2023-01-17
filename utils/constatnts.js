@@ -5,7 +5,7 @@ const AUTH_ERROR_CODE = 401;
 const FORBIDDEN_ERROR_CODE = 403;
 const ALREADY_EXIST_CODE = 409;
 
-const DEFAULT_ERROR_MESSAGE = "Произошла ошибка";
+const DEFAULT_ERROR_MESSAGE = "На сервере произошла ошибка";
 const WRONG_CARD_ID = "Передан некорректный Id карточки";
 const CARD_DOES_NOT_EXIST = "Карточка не существует";
 const VALIDATION_ERROR_MESSAGE = "Произошла ошибка валидации";

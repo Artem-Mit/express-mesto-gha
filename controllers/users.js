@@ -79,10 +79,10 @@ const createUser = (req, res, next) => {
     });
 };
 
-const updateUser = (req, res, next) => {
+const userInfoUpdater = (req, res, next, info) => {
   User.findByIdAndUpdate(
     req.user._id,
-    { name: req.body.name, about: req.body.about },
+    info,
     { new: true, runValidators: true },
   )
     .then((user) => res.send(user))
@@ -95,20 +95,12 @@ const updateUser = (req, res, next) => {
     });
 };
 
+const updateUser = (req, res, next) => {
+  userInfoUpdater(req, res, next, { name: req.body.name, about: req.body.about });
+};
+
 const updateAvatar = (req, res, next) => {
-  User.findByIdAndUpdate(
-    req.user._id,
-    { avatar: req.body.avatar },
-    { new: true, runValidators: true },
-  )
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        next(new ValidationError(VALIDATION_ERROR_MESSAGE));
-        return;
-      }
-      next(err);
-    });
+  userInfoUpdater(req, res, next, { avatar: req.body.avatar });
 };
 
 const login = (req, res, next) => {
